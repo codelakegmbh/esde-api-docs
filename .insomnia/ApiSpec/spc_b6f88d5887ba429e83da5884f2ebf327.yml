@@ -1,0 +1,221 @@
+_id: spc_b6f88d5887ba429e83da5884f2ebf327
+type: ApiSpec
+parentId: wrk_98e85357a8114199b3a7855e8b2fba7e
+modified: 1602762428993
+created: 1602753238946
+fileName: ESDE Workshop
+contents: >
+  openapi: "3.0.0"
+
+  info:
+    version: 1.0.0
+    title: ESDE Workshop
+    
+    license:
+      name: MIT
+    description: "This is the API documentation for the ESDE Workshop Api (Quarkus Base) held by Jörn Neumeyer and Maurits van der Zee."
+    contact:
+      email: business@code-lake.com
+
+  tags:
+    - name: submission
+      description: Operations about submissions
+
+  servers:
+    - url: https://esde.code-lake.com/v1
+
+  paths:
+    /submissions:
+      get:
+        summary: Get all submissions
+        operationId: listSubmissions
+        tags:
+          - submission
+        responses:
+          '200':
+            description: An array of submissions
+            content:
+              application/json:    
+                schema:
+                  $ref: "#/components/schemas/Submissions"
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+      post:
+        summary: Create a submission
+        operationId: createSubmission
+        tags:
+          - submission
+        requestBody:
+                $ref: "#/components/requestBodies/Submission"
+        responses:
+          '201':
+            description: Submission created
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/SubmissionWithToken"
+          default:
+            description: unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+    /submissions/{id}:
+      get:
+        summary: Get a specific submission
+        operationId: showSubmissionById
+        tags:
+          - submission
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: The id of the submission to retrieve
+            schema:
+              type: string
+        responses:
+          '200':
+            description: OK; Submission found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Submission"
+          '404':
+            description: Submission not found
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+      put:
+        summary: Update a submission
+        operationId: updateSubmission
+        tags:
+          - submission
+        requestBody:
+                $ref: "#/components/requestBodies/SubmissionWithToken"
+        responses:
+          '200':
+            description: OK; Submission has been updated
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Submission"
+          '400':
+            description: Bad request; Path ID does not match body ID
+          '403':
+            description: Authentication token not provided or invalid
+          '404':
+            description: Submission not found
+          default:
+            description: unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+      delete:
+        tags:
+          - submission
+        summary: Delete an existing submission
+        description: "This operation deletes a submission."
+        operationId: deleteSubmission
+        parameters:
+          - name: id
+            in: path
+            description: Submission ID
+            required: true
+            schema:
+              type: integer
+              format: int64
+        requestBody:
+          $ref: "#/components/requestBodies/Submission"
+        responses:
+          "200":
+            description: OK; Submission has been deleted
+          "400":
+            description: Invalid ID supplied
+          "401":
+            $ref: "#/components/responses/Unauthorized"
+          "404":
+            $ref: "#/components/responses/NotFound"
+          "405":
+            description: Validation exception
+
+  components:
+    requestBodies:
+      Submission:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Submission"
+        description: Submission object that needs to be added to the system.
+        required: true
+      SubmissionWithToken:
+        application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionWithToken"
+    schemas:
+      Submission:
+        type: object
+        required:
+          - imageUrl
+          - comment
+          - uploader
+        properties:
+          id:
+            type: integer
+            format: int64
+            example: 4
+          imageUrl:
+            type: string
+            example: https://cdn.code-lake.com/img/esde/sample.png
+          comment:
+            type: string
+            example: This is a sample comment
+          uploader:
+            type: string
+            example: Anon
+      SubmissionWithToken:
+        allOf:
+          - $ref: '#/components/schemas/Submission'
+          - type: object
+        properties:
+          token:
+            type: string
+            example: HkADxMPxjuQKstcruNWuTOmnAVxAKYFd
+      Submissions:
+        type: array
+        items:
+          $ref: "#/components/schemas/Submission"
+      Error:
+        type: object
+        required:
+          - code
+          - message
+        properties:
+          code:
+            type: integer
+            format: int32
+          message:
+            type: string
+    responses:
+      # 401 Unauthorized
+      Unauthorized:
+        description: Unauthorized; Authorization information is missing or invalid.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+      # 404 Not Found
+      NotFound:
+        description: The specified resource was not found
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+contentType: yaml
